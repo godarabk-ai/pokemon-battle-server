@@ -43,12 +43,8 @@ function createRoom(hostSocketId, hostName) {
 }
 
 function generateRoomCode() {
-    // 6-character alphanumeric code
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    // Simple 3-digit numeric code (100-999)
+    let code = String(Math.floor(100 + Math.random() * 900));
     // Ensure uniqueness
     if (rooms.has(code)) return generateRoomCode();
     return code;
