@@ -1,0 +1,208 @@
+/* === COMPONENTS.CSS ===
+   Buttons, Cards, Badges, Bench slots, Sprites
+*/
+
+/* Buttons */
+.btn-primary {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 1rem 2.5rem;
+    font-size: 1.25rem;
+    font-weight: bold;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+.btn-primary:active { transform: scale(0.95); }
+
+.btn-control {
+    background-color: var(--bg-panel);
+    color: white;
+    padding: 1rem;
+    font-size: 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.move-btn {
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--move-bg, #374151);
+    color: #e5e7eb;
+    border: none;
+    border-left: 4px solid var(--move-color, #6b7280);
+    border-radius: 0.25rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+}
+.move-btn:hover { background-color: var(--move-bg-hover, #4b5563); color: white; }
+.move-btn:active { background-color: #1f2937; }
+.move-name { font-weight: bold; font-size: 0.85rem; }
+
+.moves-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+}
+
+/* Evolution Button */
+.evolve-btn {
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: bold;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+    margin-top: 0.25rem;
+}
+.evolve-btn:hover { transform: scale(1.03); box-shadow: 0 4px 12px rgba(124, 58, 237, 0.6); }
+.evolve-btn:active { transform: scale(0.97); }
+.evolve-btn.btn-disabled, .evolve-btn:disabled {
+    background: #4b5563;
+    cursor: not-allowed;
+    opacity: 0.5;
+    box-shadow: none;
+}
+.evolve-icon { font-size: 1rem; }
+
+/* Bench Slots */
+.bench-slot {
+    width: 2.5rem; height: 2.5rem;
+    border-radius: 0.5rem;
+    border: 2px solid #4b5563;
+    background-color: #374151;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.bench-slot img { width: 100%; height: 100%; object-fit: cover; }
+.bench-slot.active-slot { border-color: #facc15; box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.5); }
+.bench-dead { filter: grayscale(100%) opacity(0.5); cursor: not-allowed; }
+.hp-mini-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: #1f2937; }
+.hp-mini-fill { height: 100%; transition: width 0.3s; }
+
+/* Sprites */
+.sprite-box {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    transition: transform 0.3s;
+}
+.pokemon-img {
+    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+    transition: all 0.5s;
+    object-fit: contain;
+    max-height: 420px; 
+    z-index: 20;
+}
+#p1-img { transform: scaleX(-1); } /* P1 faces right (sprites are left-facing) */
+
+/* Shadows */
+.shadow-oval {
+    width: 8rem; height: 1.5rem;
+    background: rgba(0,0,0,0.4);
+    border-radius: 50%;
+    filter: blur(8px);
+    position: absolute;
+    bottom: 0.5rem;
+    z-index: 0;
+    transform: rotateX(65deg);
+    transform-origin: center;
+    opacity: 0.55;
+    transition: transform 0.12s ease-out, opacity 0.12s ease-out;
+}
+.sprite-box.is-airborne .shadow-oval {
+    transform: rotateX(65deg) scale(0.65);
+    opacity: 0.25;
+}
+
+/* Stats Cards */
+.stats-card {
+    position: absolute;
+    top: 3rem;
+    background: var(--bg-card);
+    backdrop-filter: blur(8px);
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    width: 10rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 20;
+}
+.stats-p1 { border-left: 4px solid var(--accent-p1); left: 1rem; }
+.stats-p2 { border-right: 4px solid var(--accent-p2); right: 1rem; text-align: right; }
+
+.mon-name { font-weight: bold; font-size: 1rem; line-height: 1; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hp-track { width: 100%; height: 0.5rem; background: #374151; border-radius: 999px; overflow: hidden; margin-top: 0.25rem; position: relative; }
+.hp-chip { position: absolute; inset: 0 auto 0 0; height: 100%; background: #facc15; width: 100%; transition-property: width; transition-timing-function: ease-out; z-index: 0; }
+.hp-fill { position: absolute; inset: 0 auto 0 0; height: 100%; transition: width 0.2s ease-out, background-color 0.3s; z-index: 1; }
+.hp-text { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+/* Type Badges */
+.types-row { display: flex; gap: 0.25rem; margin: 0.25rem 0; }
+.stats-p2 .types-row { justify-content: flex-end; }
+.type-badge {
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.65rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: white;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}
+
+/* Blocker Overlay */
+#input-blocker {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 40;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+.wait-text { font-weight: bold; letter-spacing: 0.1em; color: rgba(255,255,255,0.6); animation: pulse 1.5s infinite; }
+
+.side-wait-overlay {
+    position: absolute;
+    inset: 2.2rem 0.5rem 0.5rem;
+    border-radius: 0.6rem;
+    background: rgba(0,0,0,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.65);
+    pointer-events: none;
+    z-index: 20;
+    backdrop-filter: blur(2px);
+}

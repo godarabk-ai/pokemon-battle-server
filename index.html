@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PocketBattle Offline</title>
+    
+    <!-- Main combined CSS (original) -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Modular CSS (optional - for development) -->
+    <!--
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/effects.css">
+    -->
+</head>
+<body>
+
+    <div id="setup-screen">
+        <h1>BATTLE SETUP</h1>
+        
+        <div style="margin-bottom: 2rem; text-align: center;">
+            <div style="color: #9ca3af; margin-bottom: 0.5rem; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;">Team Size</div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button onclick="adjustTeamSize(-1)" class="btn-control">-</button>
+                <span id="team-size-display" style="font-size: 3rem; font-weight: bold; width: 3rem; text-align: center;">3</span>
+                <button onclick="adjustTeamSize(1)" class="btn-control">+</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 2rem; text-align: center; width: min(520px, 92vw);">
+            <div style="color: #9ca3af; margin-bottom: 0.75rem; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;">Pokédex Range</div>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 4rem; text-align: left; color: #d1d5db; font-weight: bold;">Min</div>
+                    <input id="pokedex-min" type="range" min="1" max="151" value="1" style="flex: 1;" oninput="setPokedexMin(this.value)">
+                    <div id="pokedex-min-display" style="width: 3.5rem; text-align: right; color: #e5e7eb; font-weight: bold;">1</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 4rem; text-align: left; color: #d1d5db; font-weight: bold;">Max</div>
+                    <input id="pokedex-max" type="range" min="1" max="151" value="151" style="flex: 1;" oninput="setPokedexMax(this.value)">
+                    <div id="pokedex-max-display" style="width: 3.5rem; text-align: right; color: #e5e7eb; font-weight: bold;">151</div>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="startGame()" class="btn-primary">
+            START LOCAL BATTLE
+        </button>
+        
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem;">
+            <button id="online-play-btn" onclick="OnlineGame.goOnline()" class="btn-primary" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); opacity: 0.5; pointer-events: none;" disabled>
+                🌐 PLAY ONLINE
+            </button>
+            <span id="server-status" style="font-size: 0.85rem; color: #fbbf24;">⏳ Checking server...</span>
+        </div>
+    </div>
+    
+    <script>
+        // Server status check will be triggered after all scripts load
+        window.checkServerStatus = async function checkServer() {
+            const btn = document.getElementById('online-play-btn');
+            const status = document.getElementById('server-status');
+            
+            if (!btn || !status) return;
+            
+            if (typeof NetworkClient !== 'undefined' && NetworkClient.checkServerStatus) {
+                try {
+                    const isOnline = await NetworkClient.checkServerStatus();
+                    if (isOnline) {
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                        btn.style.pointerEvents = 'auto';
+                        status.textContent = '✅ Server online';
+                        status.style.color = '#22c55e';
+                    } else {
+                        status.textContent = '🔄 Server waking up...';
+                        status.style.color = '#f59e0b';
+                        // Retry after 5 seconds
+                        setTimeout(checkServer, 5000);
+                    }
+                } catch (err) {
+                    status.textContent = '🔄 Retrying...';
+                    status.style.color = '#f59e0b';
+                    setTimeout(checkServer, 5000);
+                }
+            } else {
+                // NetworkClient not loaded yet, retry
+                setTimeout(checkServer, 500);
+            }
+        };
+    </script>
+
+    <!-- ONLINE LOBBY -->
+    <div id="online-lobby" class="hidden" style="position: fixed; inset: 0; background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; z-index: 1000;">
+        <h1 style="font-size: 2rem; margin-bottom: 0.5rem; background: linear-gradient(90deg, #3b82f6, #8b5cf6); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">ONLINE BATTLE</h1>
+        <p id="lobby-status" style="color: #9ca3af; margin-bottom: 2rem; font-size: 0.9rem;">Connected</p>
+        
+        <!-- Main Lobby -->
+        <div id="lobby-main" style="display: flex; flex-direction: column; gap: 1.5rem; width: min(400px, 90vw);">
+            <input type="text" id="online-player-name" placeholder="Your Name" maxlength="16" 
+                   style="padding: 1rem; font-size: 1.1rem; border-radius: 0.5rem; border: 2px solid #4b5563; background: #1f2937; color: white; text-align: center;">
+            
+            <div style="display: flex; gap: 1rem;">
+                <button onclick="OnlineGame.createRoom()" class="btn-primary" style="flex: 1; background: #22c55e;">
+                    CREATE ROOM
+                </button>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 0.5rem; color: #6b7280;">
+                <div style="flex: 1; height: 1px; background: #4b5563;"></div>
+                <span>OR JOIN</span>
+                <div style="flex: 1; height: 1px; background: #4b5563;"></div>
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="room-code-input" placeholder="ROOM CODE" maxlength="6" 
+                       style="flex: 1; padding: 1rem; font-size: 1.2rem; border-radius: 0.5rem; border: 2px solid #4b5563; background: #1f2937; color: white; text-align: center; text-transform: uppercase; letter-spacing: 3px;">
+                <button onclick="OnlineGame.joinRoom()" class="btn-primary" style="background: #3b82f6; padding: 1rem 1.5rem;">
+                    JOIN
+                </button>
+            </div>
+            
+            <button onclick="OnlineGame.goOffline()" style="margin-top: 1rem; padding: 0.75rem; background: transparent; border: 1px solid #4b5563; color: #9ca3af; border-radius: 0.5rem; cursor: pointer;">
+                ← Back to Local Play
+            </button>
+        </div>
+        
+        <!-- Waiting for Opponent -->
+        <div id="lobby-waiting" class="hidden" style="text-align: center;">
+            <div style="font-size: 1.2rem; color: #9ca3af; margin-bottom: 1rem;">Waiting for opponent...</div>
+            <div style="font-size: 0.9rem; color: #6b7280; margin-bottom: 1rem;">Share this code:</div>
+            <div id="display-room-code" style="font-size: 3rem; font-weight: bold; letter-spacing: 8px; color: #fbbf24; margin-bottom: 2rem; font-family: monospace;">------</div>
+            <div class="spinner" style="width: 40px; height: 40px; border: 4px solid #4b5563; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 2rem;"></div>
+            <button onclick="OnlineGame.leaveRoom()" style="padding: 0.75rem 2rem; background: #ef4444; border: none; color: white; border-radius: 0.5rem; cursor: pointer;">
+                Cancel
+            </button>
+        </div>
+        
+        <!-- Ready Screen -->
+        <div id="lobby-ready" class="hidden" style="text-align: center;">
+            <div style="font-size: 1.2rem; color: #22c55e; margin-bottom: 0.5rem;">✓ Opponent Found!</div>
+            <div style="font-size: 1.5rem; color: white; margin-bottom: 2rem;">
+                VS <span id="opponent-name-display" style="color: #fbbf24;">Opponent</span>
+            </div>
+            <button id="online-ready-btn" onclick="OnlineGame.setReady()" class="btn-primary" style="font-size: 1.5rem; padding: 1rem 3rem; background: #22c55e;">
+                READY!
+            </button>
+            <button onclick="OnlineGame.leaveRoom()" style="display: block; margin: 1rem auto 0; padding: 0.5rem 1rem; background: transparent; border: 1px solid #4b5563; color: #9ca3af; border-radius: 0.5rem; cursor: pointer;">
+                Leave Room
+            </button>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #room-code-input::placeholder { letter-spacing: 2px; }
+    </style>
+
+    <div id="cinematic-overlay" class="hidden">
+        <div class="shutter shutter-top"></div>
+        <div class="shutter shutter-bottom"></div>
+        <div class="cinematic-center">
+            <div class="cinematic-title">PREPARING BATTLE...</div>
+            <div class="cinematic-progress">
+                <div id="cinematic-progress-fill" class="cinematic-progress-fill" style="width: 0%;"></div>
+            </div>
+            <div id="cinematic-status" class="cinematic-status">Loading assets</div>
+        </div>
+    </div>
+
+    <div id="game-over-overlay" class="hidden">
+        <h1 style="font-size: 3rem; margin-bottom: 1rem;">PLAYER 1 WINS!</h1>
+        <div id="rematch-options" class="hidden" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+            <button id="rematch-same-btn" onclick="OnlineGame.requestRematchSameTeam()" class="btn-primary" style="background: #22c55e;">
+                REMATCH (Same Team)
+            </button>
+            <button id="rematch-random-btn" onclick="OnlineGame.requestRematchRandomTeam()" class="btn-primary" style="background: #3b82f6;">
+                REMATCH (Random Team)
+            </button>
+        </div>
+        <button onclick="location.reload()" class="btn-primary" style="background-color: #eab308; color: black;">
+            PLAY AGAIN
+        </button>
+    </div>
+
+    <div class="top-bar">
+        <div class="bench-container p1-bench">
+            <div class="team-label label-p1">Player 1 Team <span id="p1-team-power" style="color: rgba(255,255,255,0.65); font-weight: 700; margin-left: 0.5rem;"></span></div>
+            <div class="bench-grid p1-bench-grid">
+                </div>
+        </div>
+
+        <div class="turn-center">
+            <div id="turn-badge">PLAYER 1 TURN</div>
+            <div id="turn-indicator-text" style="font-size: 1.2rem; color: #fbbf24; font-weight: bold; margin-top: 0.5rem; text-align: center; min-height: 1.5rem;"></div>
+            <button id="restart-match-btn" onclick="OnlineGame.requestRestartMatch()" class="hidden" style="margin-top: 0.5rem; padding: 0.25rem 0.75rem; font-size: 0.75rem; background: #ef4444; color: white; border: none; border-radius: 0.25rem; cursor: pointer;">Restart Match</button>
+            <div id="turn-timer" class="turn-timer">
+                <div id="turn-timer-fill" class="turn-timer-fill" style="width: 100%;"></div>
+            </div>
+        </div>
+
+        <div class="bench-container p2-bench">
+            <div class="team-label label-p2"><span id="p2-team-power" style="color: rgba(255,255,255,0.65); font-weight: 700; margin-right: 0.5rem;"></span>Player 2 Team</div>
+            <div class="bench-grid p2-bench-grid">
+                </div>
+        </div>
+    </div>
+
+    <div class="battle-stage">
+        <div class="stage-overlay absolute inset-0"></div>
+        <div class="rain-overlay absolute inset-0"></div>
+
+        <div class="fighters-container h-full relative">
+            
+            <div class="stage-half">
+                <div class="stats-card stats-p1">
+                    <div class="mon-name">Loading...</div>
+                    <div class="types-row"></div>
+                    <div class="hp-track">
+                        <div class="hp-chip" style="width: 100%;"></div>
+                        <div class="hp-fill" style="width: 100%; background-color: var(--hp-high);"></div>
+                    </div>
+                    <div class="hp-text">0 / 0 HP</div>
+                </div>
+
+                <div id="p1-sprite-box" class="sprite-box anim-idle">
+                    <img id="p1-img" src="" class="pokemon-img">
+                    <div class="shadow-oval"></div>
+                </div>
+            </div>
+
+            <div class="stage-half">
+                <div class="stats-card stats-p2">
+                    <div class="mon-name">Loading...</div>
+                    <div class="types-row"></div>
+                    <div class="hp-track">
+                        <div class="hp-chip" style="width: 100%;"></div>
+                        <div class="hp-fill" style="width: 100%; background-color: var(--hp-high);"></div>
+                    </div>
+                    <div class="hp-text">0 / 0 HP</div>
+                </div>
+
+                <div id="p2-sprite-box" class="sprite-box anim-idle">
+                    <img id="p2-img" src="" class="pokemon-img">
+                    <div class="shadow-oval"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="controls-panel">
+        
+        <div id="battle-log">
+            <div class="log-entry" style="color: #6b7280; font-style: italic;">Battle initialized...</div>
+        </div>
+
+        <div class="actions-container">
+            
+            <div id="input-blocker" class="hidden">
+                <span class="wait-text">WAITING...</span>
+            </div>
+
+            <div class="player-actions" id="p1-controls-box">
+                <div class="action-header header-p1">Player 1 Moves</div>
+                <div id="p1-wait-overlay" class="side-wait-overlay hidden">WAIT FOR OPPONENT...</div>
+                <div id="p1-actions" class="moves-grid">
+                </div>
+                <button id="p1-evolve-btn" class="evolve-btn" onclick="evolvePokemon('p1')">
+                    <span class="evolve-icon">⚡</span> EVOLVE
+                </button>
+            </div>
+
+            <div class="player-actions" id="p2-controls-box" style="opacity: 0.5; pointer-events: none;">
+                <div class="action-header header-p2">Player 2 Moves</div>
+                <div id="p2-wait-overlay" class="side-wait-overlay hidden">WAIT FOR OPPONENT...</div>
+                <div id="p2-actions" class="moves-grid">
+                </div>
+                <button id="p2-evolve-btn" class="evolve-btn" onclick="evolvePokemon('p2')">
+                    <span class="evolve-icon">⚡</span> EVOLVE
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Pokemon Database -->
+    <script src="assets/pokemon_db.js"></script>
+    
+    <!-- Socket.io Client (for online play) -->
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    
+    <!-- Audio Engine -->
+    <script src="js/game_audio.js"></script>
+    
+    <!-- Render Modules -->
+    <script src="js/render/render_fx.js"></script>
+    <script src="js/render/render_ui.js"></script>
+    <script src="js/render/render_bench.js"></script>
+    <script src="js/render/render_battle.js"></script>
+    <script src="js/render/render_engine.js"></script>
+    
+    <!-- Core Modules -->
+    <script src="js/core/core_state.js"></script>
+    <script src="js/core/core_drafting.js"></script>
+    <script src="js/core/core_battle.js"></script>
+    <script src="js/core/core_evolution.js"></script>
+    <script src="js/core/game_core.js"></script>
+    
+    <!-- Game Logic -->
+    <script src="js/game_logic.js"></script>
+    
+    <!-- Online Multiplayer -->
+    <script src="js/network.js"></script>
+    <script src="js/online_game.js"></script>
+    
+    <!-- Android Handlers -->
+    <script src="js/android_handler.js"></script>
+    
+    <!-- Initialize server status check after all scripts load -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.checkServerStatus) {
+                window.checkServerStatus();
+            }
+        });
+        // Also trigger immediately in case DOMContentLoaded already fired
+        if (document.readyState !== 'loading' && window.checkServerStatus) {
+            window.checkServerStatus();
+        }
+    </script>
+
+</body>
+</html>

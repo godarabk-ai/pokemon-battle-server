@@ -1,0 +1,165 @@
+/* === EFFECTS.CSS ===
+   Particles, Projectiles, Overlays, Arena effects
+*/
+
+/* Rain Overlay */
+.rain-overlay {
+    pointer-events: none;
+    opacity: 0;
+    background-image:
+        repeating-linear-gradient(115deg, rgba(255,255,255,0.0) 0px, rgba(255,255,255,0.0) 6px, rgba(255,255,255,0.14) 7px, rgba(255,255,255,0.0) 10px);
+    background-size: 18px 18px;
+    filter: blur(0.2px);
+}
+
+@keyframes rainMove {
+    from { background-position: 0 0; }
+    to { background-position: -140px 240px; }
+}
+
+.battle-stage.rain-on .rain-overlay {
+    opacity: 0.28;
+    animation: rainMove 0.55s linear infinite;
+}
+
+/* Floor Glow Effects */
+.battle-stage.floor-fire { box-shadow: inset 0 -80px 110px -70px rgba(239, 68, 68, 0.38); }
+.battle-stage.floor-water { box-shadow: inset 0 -80px 110px -70px rgba(59, 130, 246, 0.38); }
+.battle-stage.floor-grass { box-shadow: inset 0 -80px 110px -70px rgba(34, 197, 94, 0.34); }
+.battle-stage.floor-electric { box-shadow: inset 0 -80px 110px -70px rgba(250, 204, 21, 0.36); }
+.battle-stage.floor-ice { box-shadow: inset 0 -80px 110px -70px rgba(125, 211, 252, 0.36); }
+.battle-stage.floor-poison { box-shadow: inset 0 -80px 110px -70px rgba(168, 85, 247, 0.30); }
+
+/* Action Focus Dimming */
+.battle-stage.focus-p1 #p2-sprite-box,
+.battle-stage.focus-p1 .stats-p2 {
+    filter: brightness(0.55) saturate(0.9);
+    transition: filter 0.15s;
+}
+.battle-stage.focus-p2 #p1-sprite-box,
+.battle-stage.focus-p2 .stats-p1 {
+    filter: brightness(0.55) saturate(0.9);
+    transition: filter 0.15s;
+}
+
+/* Overlay Flash Effects */
+@keyframes overlayFlash {
+    0% { opacity: 0; }
+    25% { opacity: 0.65; }
+    100% { opacity: 0; }
+}
+.stage-overlay[class*="fx-"] { animation: overlayFlash 0.65s ease-out; }
+.stage-overlay.fx-water { background-color: rgba(59, 130, 246, 0.25); }
+.stage-overlay.fx-grass { background-color: rgba(34, 197, 94, 0.22); }
+.stage-overlay.fx-fire { background-color: rgba(239, 68, 68, 0.18); }
+.stage-overlay.fx-electric { background-color: rgba(250, 204, 21, 0.16); }
+.stage-overlay.fx-ice { background-color: rgba(125, 211, 252, 0.16); }
+.stage-overlay.fx-poison { background-color: rgba(168, 85, 247, 0.14); }
+.stage-overlay.fx-psychic { background-color: rgba(244, 114, 182, 0.14); }
+
+/* Projectile Styling */
+.projectile {
+    position: fixed;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    pointer-events: none;
+    z-index: 999;
+    transform: translate(0, 0);
+    transition: transform 0.36s linear;
+    box-shadow: 0 0 10px rgba(255,255,255,0.35);
+}
+.proj-water { background: rgba(59, 130, 246, 0.95); }
+.proj-grass { background: rgba(34, 197, 94, 0.95); }
+.proj-fire { background: rgba(239, 68, 68, 0.95); }
+.proj-electric { background: rgba(250, 204, 21, 0.95); }
+.proj-ice { background: rgba(125, 211, 252, 0.95); }
+.proj-psychic { background: rgba(244, 114, 182, 0.95); }
+.proj-poison { background: rgba(168, 85, 247, 0.95); }
+.proj-normal { background: rgba(229, 231, 235, 0.95); }
+
+/* Hit Particles */
+.hit-particle {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    pointer-events: none;
+    z-index: 999;
+    opacity: 1;
+    transform: translate(0, 0);
+    animation: particlePop 0.5s ease-out forwards;
+    box-shadow: 0 0 6px rgba(255,255,255,0.25);
+}
+@keyframes particlePop {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0.6); opacity: 0; }
+}
+.p-water { background: rgba(59, 130, 246, 0.95); }
+.p-grass { background: rgba(34, 197, 94, 0.95); }
+.p-fire { background: rgba(239, 68, 68, 0.95); }
+.p-electric { background: rgba(250, 204, 21, 0.95); }
+.p-ice { background: rgba(125, 211, 252, 0.95); }
+.p-psychic { background: rgba(244, 114, 182, 0.95); }
+.p-poison { background: rgba(168, 85, 247, 0.95); }
+.p-normal { background: rgba(229, 231, 235, 0.95); }
+
+/* Cinematic Overlay */
+.cinematic-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-dark);
+    pointer-events: none;
+}
+
+.cine-shutter {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: #000;
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cine-shutter-top { top: 0; transform: translateY(-100%); }
+.cine-shutter-bottom { bottom: 0; transform: translateY(100%); }
+
+.cine-close .cine-shutter-top { transform: translateY(0); }
+.cine-close .cine-shutter-bottom { transform: translateY(0); }
+.cine-open .cine-shutter-top { transform: translateY(-100%); }
+.cine-open .cine-shutter-bottom { transform: translateY(100%); }
+
+.cine-content {
+    z-index: 101;
+    text-align: center;
+}
+.cine-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #facc15;
+    letter-spacing: 0.2em;
+    margin-bottom: 1rem;
+}
+.cine-progress {
+    width: 200px;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 0 auto;
+}
+.cine-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #facc15, #22c55e);
+    transition: width 0.15s ease-out;
+}
+.cine-status {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.1em;
+}

@@ -1,0 +1,147 @@
+/* === LAYOUT.CSS ===
+   Screen layouts, Top bar, Battle stage, Controls panel
+*/
+
+/* Screens (Setup / Game Over) */
+#setup-screen, #start-overlay, #game-over-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: var(--bg-dark);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#setup-screen h1 { color: #facc15; font-size: 2.5rem; margin-bottom: 2rem; }
+#game-over-overlay { background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
+
+/* Top Bar (Benches) */
+.top-bar {
+    height: 7rem;
+    background-color: var(--bg-panel);
+    border-bottom: 2px solid #374151;
+    display: flex;
+    padding: 0 0.5rem;
+    align-items: center;
+    z-index: 20;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.bench-container { width: 33%; display: flex; flex-direction: column; gap: 0.25rem; }
+.bench-grid { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.p1-bench { align-items: flex-start; }
+.p2-bench { align-items: flex-end; }
+.p2-bench .bench-grid { justify-content: flex-end; }
+
+.team-label { font-size: 0.65rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+.label-p1 { color: var(--accent-p1); }
+.label-p2 { color: var(--accent-p2); }
+
+/* Turn Indicator */
+.turn-center { width: 34%; text-align: center; }
+#turn-badge {
+    display: inline-block;
+    padding: 0.25rem 1rem;
+    background-color: #eab308;
+    color: black;
+    font-weight: bold;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    box-shadow: 0 0 15px rgba(234, 179, 8, 0.5);
+    animation: pulse 2s infinite;
+}
+
+.turn-timer {
+    margin: 0.25rem auto 0;
+    width: min(240px, 60vw);
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.12);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.turn-timer-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, rgba(34,197,94,0.95), rgba(250,204,21,0.95), rgba(239,68,68,0.95));
+    transition: width 0.2s linear;
+}
+
+/* Battle Stage */
+.battle-stage {
+    flex: 1;
+    position: relative;
+    background-image: url('../assets/images/bg_battle.jpg');
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    transform-origin: center;
+}
+
+.stage-overlay {
+    background-color: rgba(17, 24, 39, 0.4);
+    transition: background-color 0.2s;
+}
+
+.fighters-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 5rem;
+    display: flex;
+    align-items: flex-end;
+}
+
+.stage-half {
+    width: 50%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* Bottom Controls */
+.controls-panel {
+    height: 14rem;
+    background-color: var(--bg-panel);
+    border-top: 4px solid #374151;
+    z-index: 30;
+    display: flex;
+    padding: 0.5rem;
+    gap: 1rem;
+}
+
+/* Logs */
+#battle-log {
+    width: 25%;
+    background: rgba(0,0,0,0.3);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: #d1d5db;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.log-entry { margin-bottom: 0.25rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2px; }
+
+/* Action Grid */
+.actions-container { flex: 1; display: flex; gap: 0.5rem; position: relative; }
+.player-actions {
+    flex: 1;
+    background: rgba(55, 65, 81, 0.5);
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: opacity 0.3s;
+}
+.action-header { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; text-align: center; margin-bottom: 0.25rem; }
+.header-p1 { color: var(--accent-p1); }
+.header-p2 { color: var(--accent-p2); }
