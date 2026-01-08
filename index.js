@@ -36,6 +36,7 @@ function createRoom(hostSocketId, hostName) {
         guestName: null,
         state: 'waiting', // waiting, drafting, battle, finished
         gameState: null,
+        savedTeams: null,
         hostReady: false,
         guestReady: false,
         createdAt: Date.now()
@@ -179,9 +180,21 @@ io.on('connection', (socket) => {
         
         // Both teams ready?
         if (room.gameState.p1Team && room.gameState.p2Team) {
+            room.state = 'battle';
+
+            room.savedTeams = {
+                p1Team: JSON.parse(JSON.stringify(room.gameState.p1Team)),
+                p2Team: JSON.parse(JSON.stringify(room.gameState.p2Team))
+            };
+
             io.to(roomCode).emit('battle-ready', {
                 p1Team: room.gameState.p1Team,
                 p2Team: room.gameState.p2Team
+            });
+
+            io.to(roomCode).emit('turn-update', {
+                turn: room.gameState.turn,
+                turnId: room.gameState.turnId
             });
         }
     });
@@ -286,35 +299,83 @@ io.on('connection', (socket) => {
         });
     });
 
-    // --- REMATCH REQUEST ---
-    socket.on('request-rematch', () => {
+    function restartWithMode(roomCode, room, mode) {
+        const pickedMode = mode === 'random' ? 'random' : 'same';
+
+        room.gameState = { p1Team: null, p2Team: null, turn: 'p1', turnId: 0 };
+
+        if (pickedMode === 'same' && room.savedTeams && room.savedTeams.p1Team && room.savedTeams.p2Team) {
+            room.state = 'battle';
+            room.gameState.p1Team = JSON.parse(JSON.stringify(room.savedTeams.p1Team));
+            room.gameState.p2Team = JSON.parse(JSON.stringify(room.savedTeams.p2Team));
+
+            io.to(roomCode).emit('battle-ready', {
+                p1Team: room.gameState.p1Team,
+                p2Team: room.gameState.p2Team
+            });
+            io.to(roomCode).emit('turn-update', {
+                turn: room.gameState.turn,
+                turnId: room.gameState.turnId
+            });
+            return;
+        }
+
+        room.state = 'drafting';
+        io.to(roomCode).emit('rematch-start', { mode: 'random' });
+    }
+
+    socket.on('request-rematch', (data) => {
         const roomCode = playerRooms.get(socket.id);
         const room = rooms.get(roomCode);
         if (!room) return;
-        
+
+        const mode = data && data.mode ? String(data.mode) : 'same';
         const isHost = socket.id === room.hostId;
         const opponentId = isHost ? room.guestId : room.hostId;
-        
+
         if (opponentId) {
             io.to(opponentId).emit('rematch-requested', {
-                from: isHost ? room.hostName : room.guestName
+                from: isHost ? room.hostName : room.guestName,
+                mode
             });
         }
     });
 
-    // --- ACCEPT REMATCH ---
-    socket.on('accept-rematch', () => {
+    socket.on('accept-rematch', (data) => {
         const roomCode = playerRooms.get(socket.id);
         const room = rooms.get(roomCode);
         if (!room) return;
-        
-        // Reset room state
-        room.state = 'ready';
-        room.hostReady = false;
-        room.guestReady = false;
-        room.gameState = null;
-        
-        io.to(roomCode).emit('rematch-accepted');
+
+        const mode = data && data.mode ? String(data.mode) : 'same';
+        io.to(roomCode).emit('rematch-accepted', { mode });
+        restartWithMode(roomCode, room, mode);
+    });
+
+    socket.on('restart-request', (data) => {
+        const roomCode = playerRooms.get(socket.id);
+        const room = rooms.get(roomCode);
+        if (!room) return;
+
+        const mode = data && data.mode ? String(data.mode) : 'same';
+        const isHost = socket.id === room.hostId;
+        const opponentId = isHost ? room.guestId : room.hostId;
+
+        if (opponentId) {
+            io.to(opponentId).emit('restart-requested', {
+                from: isHost ? room.hostName : room.guestName,
+                mode
+            });
+        }
+    });
+
+    socket.on('restart-accept', (data) => {
+        const roomCode = playerRooms.get(socket.id);
+        const room = rooms.get(roomCode);
+        if (!room) return;
+
+        const mode = data && data.mode ? String(data.mode) : 'same';
+        io.to(roomCode).emit('restart-start', { mode });
+        restartWithMode(roomCode, room, mode);
     });
 
     // --- LEAVE ROOM ---
