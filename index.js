@@ -196,18 +196,22 @@ io.on('connection', (socket) => {
         }
         
         console.log(`[ACTION] ${playerKey} in ${roomCode}:`, data.type);
-        
-        // Broadcast action to opponent
-        const opponentId = isHost ? room.guestId : room.hostId;
-        io.to(opponentId).emit('opponent-action', {
+
+        // Broadcast action to opponent (room broadcast excluding sender)
+        // More robust than tracking opponent socket id (which can change on reconnect).
+        socket.to(roomCode).emit('opponent-action', {
             action: data.type,
             payload: data.payload,
             playerKey
         });
-        
-        // Update turn
+
+        // Update turn (server authoritative) + broadcast to keep both clients in sync
         room.gameState.turn = isHost ? 'p2' : 'p1';
         room.gameState.turnId++;
+        io.to(roomCode).emit('turn-update', {
+            turn: room.gameState.turn,
+            turnId: room.gameState.turnId
+        });
     });
 
     // --- GAME STATE SYNC (for reconnection or verification) ---
