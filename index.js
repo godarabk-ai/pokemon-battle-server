@@ -127,9 +127,13 @@ io.on('connection', (socket) => {
 
     // --- PLAYER READY ---
     socket.on('player-ready', () => {
+        console.log(`[PLAYER-READY] ${socket.id}`);
         const roomCode = playerRooms.get(socket.id);
         const room = rooms.get(roomCode);
-        if (!room) return;
+        if (!room) {
+            console.log(`[PLAYER-READY] No room found for ${socket.id}`);
+            return;
+        }
         
         if (socket.id === room.hostId) {
             room.hostReady = true;
@@ -144,7 +148,9 @@ io.on('connection', (socket) => {
         });
         
         // Both ready? Start game!
+        console.log(`[PLAYER-READY] Room ${roomCode}: hostReady=${room.hostReady}, guestReady=${room.guestReady}`);
         if (room.hostReady && room.guestReady) {
+            console.log(`[GAME-START] Emitting to room ${roomCode}`);
             room.state = 'battle';
             io.to(roomCode).emit('game-start', {
                 hostName: room.hostName,
